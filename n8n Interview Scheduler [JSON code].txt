@@ -1,0 +1,363 @@
+{
+  "name": "Interview Scheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "events": [
+          "invitee.created"
+        ]
+      },
+      "id": "92e8726b-8275-4199-8fc6-8ad60d353a38",
+      "name": "Calendly Booking",
+      "type": "n8n-nodes-base.calendlyTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "ddf63f7a-c319-4996-8a31-2bf74b1aee0a",
+      "credentials": {
+        "calendlyOAuth2Api": {
+          "id": "5KYZSgpwdIZD59Z3",
+          "name": "Calendly account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "start": "={{ $json.start_time }}",
+        "end": "={{ $json.end_time }}",
+        "additionalFields": {
+          "summary": "=Interview with {{ $json.name }}"
+        }
+      },
+      "id": "df92a68c-4698-4637-9a06-0cd114926073",
+      "name": "Create Google Calendar Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        304
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "pavWksefjfXOs32l",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "topic": "=Interview with {{ $('Calendly Booking').item.json.name }}",
+        "additionalFields": {
+          "duration": 30,
+          "startTime": "2026-05-21T02:02:02"
+        }
+      },
+      "id": "f6f56b0e-4031-4a68-8c8d-4c11207e0c70",
+      "name": "Create Zoom Meeting",
+      "type": "n8n-nodes-base.zoom",
+      "typeVersion": 1,
+      "position": [
+        688,
+        304
+      ],
+      "credentials": {
+        "zoomOAuth2Api": {
+          "id": "MuFJzTFgmHG1sUZu",
+          "name": "Zoom account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "primary"
+        },
+        "eventId": "={{ $('Create Google Calendar Event').item.json.id }}",
+        "updateFields": {
+          "description": "={{ $json.join_url }}"
+        }
+      },
+      "id": "46fde51b-6e66-4b0d-b9bc-8f3083cb8c95",
+      "name": "Update Google Calendar Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        912,
+        304
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "pavWksefjfXOs32l",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Calendly Booking').item.json.invitee_email }}",
+        "subject": "Interview Confirmed",
+        "message": "=Your interview has been confirmed.\n\nZoom Link: {{ $('Create Zoom Meeting').item.json.join_url }}\n\nInterview Time: {{ $('Calendly Booking').item.json.start_time }}",
+        "options": {}
+      },
+      "id": "fc3c8930-865f-4519-adb1-9c587b67ff1f",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        304
+      ],
+      "webhookId": "b25e3702-3920-40fa-8e60-811022181b4b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "i4HLx5gUXfWs0uSO",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "general"
+        },
+        "text": "=New interview scheduled with {{ $('Calendly Booking').item.json.invitee_name }} at {{ $('Calendly Booking').item.json.start_time }}",
+        "otherOptions": {}
+      },
+      "id": "34bc9d00-eb35-466d-b000-8bb9032ccf2a",
+      "name": "Notify Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1360,
+        304
+      ],
+      "webhookId": "1c306fa2-8e15-4d88-896c-75c2a533652f",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "02EeRlK6DeE0kp1j",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "options": {}
+      },
+      "id": "61e1fa91-a550-4fc6-bb95-9765a177aad2",
+      "name": "Notify Discord",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        304
+      ],
+      "webhookId": "fb5e0c58-ce6b-43af-89f0-141340c1a41e",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "Gs9uTxpCXlkQgXP5",
+          "name": "Discord Bot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I",
+          "mode": "list",
+          "cachedResultName": "Lead Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Time stamp",
+              "displayName": "Time stamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan choice",
+              "displayName": "Plan choice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "cc4e85f7-ed7d-446b-9b6c-879068b46dc6",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "y3X3O9h9KIjHP6Jp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Calendly Booking": {
+      "main": [
+        [
+          {
+            "node": "Create Google Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Create Zoom Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Zoom Meeting": {
+      "main": [
+        [
+          {
+            "node": "Update Google Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Google Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation Email": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Slack": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Discord": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "Calendly Booking": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

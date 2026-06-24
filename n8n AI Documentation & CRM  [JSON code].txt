@@ -1,0 +1,544 @@
+{
+  "name": "AI Documentation & CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "name",
+              "value": "={{ $json.body.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "email",
+              "value": "={{ $json.body.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "role",
+              "value": "={{ $json.body.Role }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "experience",
+              "value": "={{ $json.body.Experience }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "skills",
+              "value": "={{ $json.body.Skills }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "portfolio",
+              "value": "={{ $json.body.Portfolio }}",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "availability",
+              "value": "={{ $json.body.Availability }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d440c47a-c3ef-45b5-91e0-298d299b97bb",
+      "name": "Extract Form Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I",
+          "mode": "list",
+          "cachedResultName": "Lead Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "combineFilters": "={{ $json.email }}",
+        "options": {}
+      },
+      "id": "43cac7c9-603b-4de5-a38a-29d45b995fe4",
+      "name": "Search Email in Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1008,
+        -432
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "y3X3O9h9KIjHP6Jp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const formData = $input.all().map((item) => item.json)[0];\nconst sheetData = $(\"Search Email in Sheet\")\n  .all()\n  .map((item) => item.json)[0];\n\nconst name = formData.name || sheetData[\"Full Name\"] || \"Not provided\";\nconst email = formData.email || sheetData.Email || \"Not provided\";\nconst role = formData.role || \"Not provided\";\nconst experience = formData.experience || \"Not provided\";\nconst skills = formData.skills || \"Not provided\";\nconst portfolio = formData.portfolio || \"Not provided\";\nconst availability = formData.availability || \"Not provided\";\n\nconst prompt = `\nExecutive Summary:\nName: ${name}\nEmail: ${email}\nRole: ${role}\nExperience: ${experience}\nSkills: ${skills}\nPortfolio: ${portfolio}\nAvailability: ${availability}\n\nAssessment Framework:\n1. Evaluate the candidate's skills and experience.\n2. Assess the candidate's portfolio.\n3. Check the candidate's availability.\n\nInterview Questions:\n1. Can you tell us more about your experience in ${role}?\n2. What are the key skills that you bring to this role?\n3. Can you share some of the projects in your portfolio?\n4. What is your availability for this role?\n\nEvaluation Rubric:\n1. Skills and Experience: 1-5\n2. Portfolio: 1-5\n3. Availability: 1-5\n\nNext Steps:\n1. Evaluate the candidate based on the interview and the rubric.\n2. If the candidate scores high, proceed to the next steps in the hiring process.\n`;\n\nreturn { prompt, name, email, role, experience };\n"
+      },
+      "id": "db113b59-d77a-4659-8bf6-7e4c27a132cc",
+      "name": "Build AI Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "bb22a41e-a99b-4856-9dfb-9a2d40a3c445",
+      "name": "Generate Interview Packet",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1216,
+        -704
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "9EqtaOujg8rL9clw",
+          "name": "OpenAI account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "candidate_name",
+              "value": "={{ $json['Full Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "candidate_email",
+              "value": "={{ $json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "document_id",
+              "value": "={{ $(\"Create Google Doc\").item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "generated_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bbb28e8c-d884-49e2-a2c6-e4e77ff40e8f",
+      "name": "Save Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2352,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "folderId": "1l2cQ0gazmldAcowvH28c0781MTTPXOey",
+        "title": "=Interview Packet - {{ $(\"Extract Form Fields\").item.json.name }}"
+      },
+      "id": "52015ff8-38e1-43a0-9ca7-6e8f8efb4e59",
+      "name": "Create Google Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        -432
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "MEQToDmSJkAjH4dr",
+          "name": "Google Docs OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "object": "={{ \"text\" }}",
+              "action": "={{ \"insert\" }}",
+              "insertSegment": "={{ \"body\" }}",
+              "locationChoice": "={{ \"endOfSegmentLocation\" }}",
+              "index": 0,
+              "text": "={{ $('Google Sheets Trigger').item.json['Full Name'] }}"
+            }
+          ]
+        }
+      },
+      "id": "9465d24a-9b7b-4e62-9159-c52a012c8368",
+      "name": "Add Content to Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        -432
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "MEQToDmSJkAjH4dr",
+          "name": "Google Docs OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I",
+          "mode": "list",
+          "cachedResultName": "Lead Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Google Sheets Trigger').item.json.Email }}",
+            "Time stamp": "={{ $('Google Sheets Trigger').item.json['Time stamp'] }}",
+            "Full Name": "={{ $('Google Sheets Trigger').item.json['Full Name'] }}",
+            "Plan choice": "={{ $('Google Sheets Trigger').item.json['Plan choice'] }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Time stamp",
+              "displayName": "Time stamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Plan choice",
+              "displayName": "Plan choice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9b1e2dad-e132-4bd4-b310-c484caa4a33f",
+      "name": "Update Sheet Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2128,
+        -432
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "y3X3O9h9KIjHP6Jp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09J19Q9SR0",
+          "mode": "list",
+          "cachedResultName": "hiring-alerts"
+        },
+        "text": "=Interview packet ready for {{ $(\"Extract Form Fields\").item.json.name }}. Review here: https://docs.google.com/document/d/{{ $(\"Create Google Doc\").item.json.id }}",
+        "otherOptions": {}
+      },
+      "id": "0bdf50ee-9583-436c-8a10-d09b180d17f2",
+      "name": "Notify Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        2576,
+        -432
+      ],
+      "webhookId": "e1c1a25f-d445-44e7-b8be-36f8ef6516d9",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "02EeRlK6DeE0kp1j",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I",
+          "mode": "list",
+          "cachedResultName": "Lead Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Zkp0748Np89Wtz4mFs5EureOSbLV2H4M1hx93gLpV6I/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -432
+      ],
+      "id": "48f77c36-521b-468a-8c81-dc9956091edf",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "OEI3hyNCYoUOSKIf",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        -432
+      ],
+      "id": "bcf30b6d-0f26-4849-a7df-c23de05b3fde",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "Extract Form Fields": {
+      "main": [
+        [
+          {
+            "node": "Search Email in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Email in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Prompt": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Interview Packet": {
+      "main": [
+        [
+          {
+            "node": "Create Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Add Content to Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Content to Doc": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet Row": {
+      "main": [
+        [
+          {
+            "node": "Save Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Response": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Form Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
